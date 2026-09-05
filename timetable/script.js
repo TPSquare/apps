@@ -60,7 +60,7 @@ for (const week in DATA.timetable) {
     if (!active) document.body.querySelector("tbody:last-child").className = "overcome";
     if (active && !lockActive) {
       lockActive = true;
-      document.body.querySelector("tbody:last-child").id = "active";
+      document.body.querySelector("tbody:last-child").className = "active";
     }
   }
 }
@@ -75,4 +75,4 @@ function getTableLessons(data) {
   );
 }
 
-document.getElementById("active").scrollIntoView({ block: "center" });
+document.body.querySelector(".active").scrollIntoView({ block: "center" });
