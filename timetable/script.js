@@ -21,7 +21,6 @@ for (const week in DATA.timetable) {
   const wrapperElement = document.createElement("div");
   wrapperElement.id = `week_${week}`;
   wrapperElement.className = "week";
-  document.body.appendChild(wrapperElement);
 
   const titleElement = document.createElement("div");
   titleElement.className = "title";
@@ -55,14 +54,18 @@ for (const week in DATA.timetable) {
     const firstLessonsHTML = getTableLessons(dayData[0]);
     let rows = `<tr>${dayCellHTML}${firstLessonsHTML}</tr>`;
     for (let i = 1; i < dayData.length; i++) rows += `<tr>${getTableLessons(dayData[i])}</tr>`;
-    timetableElement.innerHTML += rows;
 
-    if (!active) document.body.querySelector("tbody:last-child").className = "overcome";
+    let className = "future";
+    if (!active) className = "overcome";
     if (active && !lockActive) {
       lockActive = true;
-      document.body.querySelector("tbody:last-child").className = "active";
+      className = "active";
     }
+    timetableElement.innerHTML += `<tbody class="${className}">${rows}</tbody>`;
   }
+
+  if (wrapperElement.querySelector(".future") || wrapperElement.querySelector(".active"))
+    document.body.appendChild(wrapperElement);
 }
 function getTableLessons(data) {
   const information = DATA.courseInformation[data.courseOrder];
@@ -74,5 +77,3 @@ function getTableLessons(data) {
     `<td>${information.lecturer}</td>`
   );
 }
-
-document.body.querySelector(".active").scrollIntoView({ block: "center" });
