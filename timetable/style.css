@@ -62,7 +62,7 @@ table th.lecturer {
 }
 
 table tr.personally td:not(.day) {
-  background-color: #fff5e1;
+  background-color: #FFFAF1;
 }
 
 table td.day,
