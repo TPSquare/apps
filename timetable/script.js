@@ -1,13 +1,26 @@
 const SCHEDULE = await fetch("./configs/schedule.json").then((res) => res.json());
-const DATA = await fetch(`./data.json?t=${Date.now()}`).then((res) => res.json());
 
 const START_DATE_TEXT = await fetch("./configs/start-date.json").then((res) => res.json());
 const START_DATE = new Date(START_DATE_TEXT);
+
+const DUTData = await fetch(`./data/dut.json?t=${Date.now()}`).then((res) => res.json());
+const personallyData = await fetch(`./data/personally.json?t=${Date.now()}`).then((res) =>
+  res.json(),
+);
+const DATA = DUTData;
 
 let active = false;
 let lockActive = false;
 
 for (const week in DATA.timetable) {
+  for (const day in personallyData)
+    for (const dayData of personallyData[day]) {
+      const find = ({ lessons }) => lessons[0] > dayData.lessons[0];
+      const insertIndex = DATA.timetable[week][day].findIndex(find);
+      if (insertIndex === -1) DATA.timetable[week][day].push(dayData);
+      else DATA.timetable[week][day].splice(insertIndex, 0, dayData);
+    }
+
   const weekRange = (() => {
     const startDate = new Date(START_DATE);
     startDate.setDate(startDate.getDate() + (week - 1) * 7);
@@ -28,8 +41,9 @@ for (const week in DATA.timetable) {
   wrapperElement.appendChild(titleElement);
 
   const timetableElement = document.createElement("table");
-  const headers = ["Thứ", "Tiết học", "Thời gian", "Phòng học", "Môn học", "Giảng viên"];
-  const headerCells = headers.map((e) => `<th>${e}</th>`).join("");
+  const headers = ["Thứ", "Thời gian", "Môn học", "Phòng học", "Giảng viên"];
+  const headerClasses = ["day", "time", "subject", "place", "lecturer"];
+  const headerCells = headers.map((e, i) => `<th class="${headerClasses[i]}">${e}</th>`).join("");
   timetableElement.innerHTML += `<tr>` + headerCells + `</tr>`;
   wrapperElement.appendChild(timetableElement);
 
@@ -50,10 +64,12 @@ for (const week in DATA.timetable) {
       if (Date.now() < date.getTime()) active = true;
     }
 
-    const dayCellHTML = `<td rowspan="${dayData.length}">Thứ ${day}<br><i>(${formattedDate})</i></td>`;
+    const dayCellHTML = `<td rowspan="${dayData.length}" class="day">Thứ ${day}<br><i>(${formattedDate})</i></td>`;
     const firstLessonsHTML = getTableLessons(dayData[0]);
-    let rows = `<tr>${dayCellHTML}${firstLessonsHTML}</tr>`;
-    for (let i = 1; i < dayData.length; i++) rows += `<tr>${getTableLessons(dayData[i])}</tr>`;
+    let rows = `<tr class="${getRowTag(dayData[0])}">${dayCellHTML}${firstLessonsHTML}</tr>`;
+    for (let i = 1; i < dayData.length; i++) {
+      rows += `<tr class="${getRowTag(dayData[i])}">${getTableLessons(dayData[i])}</tr>`;
+    }
 
     let className = "future";
     if (!active) className = "overcome";
@@ -64,16 +80,19 @@ for (const week in DATA.timetable) {
     timetableElement.innerHTML += `<tbody class="${className}">${rows}</tbody>`;
   }
 
-  if (wrapperElement.querySelector(".future") || wrapperElement.querySelector(".active"))
+  if (wrapperElement.querySelector(".active"))
     document.body.appendChild(wrapperElement);
 }
 function getTableLessons(data) {
-  const information = DATA.courseInformation[data.courseOrder];
+  data = Object.assign(data, DATA.courseInformation[data.courseOrder] || {});
+  const lecturerRegular = data.lecturer ? "" : "regular";
   return (
-    `<td>${data.lessons.join(" - ")}</td>` +
-    `<td>${data.lessons.map((e, i) => SCHEDULE[e - 1][i]).join(" - ")}</td>` +
-    `<td>${data.place}</td>` +
-    `<td>${information.courseName}</td>` +
-    `<td>${information.lecturer}</td>`
+    `<td class="time">${data.lessons.map((e, i) => SCHEDULE[e - 1][i]).join(" - ")}</td>` +
+    `<td>${data.courseName || data.content}</td>` +
+    `<td class="place">${data.place || ""}</td>` +
+    `<td class="${lecturerRegular}">${data.lecturer || "Tự học"}</td>`
   );
+}
+function getRowTag(daytData) {
+  return daytData.courseOrder ? "dut" : "personally";
 }
