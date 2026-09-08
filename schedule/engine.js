@@ -41,9 +41,8 @@ window.GET_TIMETABLE_DATA = (input) => {
   for (const week in timetable) {
     const daysEntries = Object.entries(timetable[week]).sort((a, b) => a[0] - b[0]);
     timetable[week] = Object.fromEntries(daysEntries);
-    for (const day in timetable[week]) {
+    for (const day in timetable[week])
       timetable[week][day] = timetable[week][day].sort((a, b) => a.lessons[0] - b.lessons[0]);
-    }
   }
   const timetableEntries = Object.entries(timetable).sort((a, b) => a[0] - b[0]);
   const sortedTimetable = Object.fromEntries(timetableEntries);

@@ -36,7 +36,7 @@ for (const week in DUTTimetable.timetable) {
 
   const titleElement = document.createElement("div");
   titleElement.className = "title";
-  titleElement.innerHTML = `<span>Thời khóa biểu - Tuần ${week}</span> <i>(${weekRangeText})</i>`;
+  titleElement.innerHTML = `<span>Thời gian biểu - Tuần ${week} (DUT)</span> <i>(${weekRangeText})</i>`;
   wrapperElement.appendChild(titleElement);
 
   const timetableElement = document.createElement("table");
@@ -56,7 +56,7 @@ for (const week in DUTTimetable.timetable) {
       .replaceAll("-", "/");
 
     if (!active) {
-      const lastLessonTime = SCHEDULE[dayData[dayData.length - 1].lessons[1] - 1][1];
+      const lastLessonTime = SCHEDULE[dayData[dayData.length - 1].lessons[1]][1];
       const [hour, minute] = lastLessonTime.split("h").map((e) => (e ? Number(e) : 0));
       date.setHours(hour);
       date.setMinutes(minute);
@@ -83,9 +83,11 @@ for (const week in DUTTimetable.timetable) {
 }
 function getTableLessons(data) {
   data = Object.assign(data, DUTTimetable.courseInformation[data.courseOrder] || {});
+  const schedule =
+    data.place === "GDTC" ? SCHEDULE["gdtc"] : data.lessons.map((e, i) => SCHEDULE[e][i]);
   const lecturerRegular = data.lecturer ? "" : "regular";
   return (
-    `<td class="time">${data.lessons.map((e, i) => SCHEDULE[e - 1][i]).join(" - ")}</td>` +
+    `<td class="time">${schedule.join(" - ")}</td>` +
     `<td>${data.courseName || data.content}</td>` +
     `<td class="place">${data.place || ""}</td>` +
     `<td class="${lecturerRegular}">${data.lecturer || "Tự học"}</td>`
