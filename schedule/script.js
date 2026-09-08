@@ -3,22 +3,21 @@ const SCHEDULE = await fetch("./configs/schedule.json").then((res) => res.json()
 const START_DATE_TEXT = await fetch("./configs/start-date.json").then((res) => res.json());
 const START_DATE = new Date(START_DATE_TEXT);
 
-const DUTData = await fetch(`./data/dut.json?t=${Date.now()}`).then((res) => res.json());
-const personallyData = await fetch(`./data/personally.json?t=${Date.now()}`).then((res) =>
-  res.json(),
-);
-const DATA = DUTData;
+const DUTTimetableAPI = `./data/dut-timetable.json?t=${Date.now()}`;
+const DUTTimetable = await fetch(DUTTimetableAPI).then((res) => res.json());
+const personalScheduleAPI = `./data/personal-schedule.json?t=${Date.now()}`;
+const personallySchedule = await fetch(personalScheduleAPI).then((res) => res.json());
 
 let active = false;
 let lockActive = false;
 
-for (const week in DATA.timetable) {
-  for (const day in personallyData)
-    for (const dayData of personallyData[day]) {
+for (const week in DUTTimetable.timetable) {
+  for (const day in personallySchedule)
+    for (const dayData of personallySchedule[day]) {
       const find = ({ lessons }) => lessons[0] > dayData.lessons[0];
-      const insertIndex = DATA.timetable[week][day].findIndex(find);
-      if (insertIndex === -1) DATA.timetable[week][day].push(dayData);
-      else DATA.timetable[week][day].splice(insertIndex, 0, dayData);
+      const insertIndex = DUTTimetable.timetable[week][day].findIndex(find);
+      if (insertIndex === -1) DUTTimetable.timetable[week][day].push(dayData);
+      else DUTTimetable.timetable[week][day].splice(insertIndex, 0, dayData);
     }
 
   const weekRange = (() => {
@@ -47,8 +46,8 @@ for (const week in DATA.timetable) {
   timetableElement.innerHTML += `<tr>` + headerCells + `</tr>`;
   wrapperElement.appendChild(timetableElement);
 
-  for (const day in DATA.timetable[week]) {
-    const dayData = DATA.timetable[week][day];
+  for (const day in DUTTimetable.timetable[week]) {
+    const dayData = DUTTimetable.timetable[week][day];
 
     const date = new Date(weekRange[0]);
     date.setDate(date.getDate() + (day - 2));
@@ -80,11 +79,10 @@ for (const week in DATA.timetable) {
     timetableElement.innerHTML += `<tbody class="${className}">${rows}</tbody>`;
   }
 
-  if (wrapperElement.querySelector(".active"))
-    document.body.appendChild(wrapperElement);
+  if (wrapperElement.querySelector(".active")) document.body.appendChild(wrapperElement);
 }
 function getTableLessons(data) {
-  data = Object.assign(data, DATA.courseInformation[data.courseOrder] || {});
+  data = Object.assign(data, DUTTimetable.courseInformation[data.courseOrder] || {});
   const lecturerRegular = data.lecturer ? "" : "regular";
   return (
     `<td class="time">${data.lessons.map((e, i) => SCHEDULE[e - 1][i]).join(" - ")}</td>` +
